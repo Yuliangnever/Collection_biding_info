@@ -13,6 +13,7 @@ class TenderSource:
     notes: str = ""
     enabled: bool = True
     parser: str = "generic_html"
+    access_note: str = ""
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> "TenderSource":
@@ -25,6 +26,7 @@ class TenderSource:
             notes=str(data.get("notes", "")),
             enabled=bool(data.get("enabled", True)),
             parser=str(data.get("parser", "generic_html")),
+            access_note=str(data.get("access_note", "")),
         )
 
 
@@ -33,4 +35,3 @@ def load_enabled_sources(raw_sources: object) -> list[TenderSource]:
         return []
     sources = [TenderSource.from_dict(item) for item in raw_sources if isinstance(item, dict)]
     return [source for source in sources if source.enabled]
-

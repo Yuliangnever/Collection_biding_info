@@ -22,6 +22,18 @@ class TenderScraper(Protocol):
         ...
 
 
+REQUEST_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+}
+
+
 @dataclass(slots=True)
 class LinkCandidate:
     title: str
@@ -152,20 +164,21 @@ class ConfiguredSourceScraper:
         try:
             response = requests.get(
                 url,
-                headers={
-                    "User-Agent": (
-                        "Mozilla/5.0 EnergyTenderMonitor/1.0 "
-                        "(compatible; tender notice monitor)"
-                    )
-                },
+                headers=REQUEST_HEADERS,
                 timeout=self.timeout,
             )
+            if response.status_code == 412:
+                print(
+                    f"抓取受限：{self.source} {url} 返回 412，"
+                    "该平台需要浏览器执行 JS/WAF 校验，普通 HTTP 爬虫无法直接读取。"
+                )
+                return []
             response.raise_for_status()
         except requests.RequestException as exc:
             print(f"抓取失败：{self.source} {url} - {exc}")
             return []
 
-        if not response.encoding:
+        if not response.encoding or response.encoding.lower() == "iso-8859-1":
             response.encoding = response.apparent_encoding
         parser = TenderLinkParser(response.url)
         parser.feed(response.text)

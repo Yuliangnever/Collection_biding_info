@@ -14,10 +14,11 @@ sources:
     company: 中国华能集团
     platform: 华能电子商务平台
     urls:
-      - https://ec.chng.com.cn/
+      - https://ec.chng.com.cn/channel/home/#/purchase?top=0
     notes: 华能集团招标采购、供应商注册、公告检索入口。
     enabled: true
-    parser: generic_html
+    parser: browser_required
+    access_note: 该入口为前端路由，且服务端返回 412 JS/WAF 校验页；需要浏览器自动化或人工登录 Cookie。
 
   - id: datang
     group: 五大
@@ -37,7 +38,8 @@ sources:
       - https://www.chdtp.com/
     notes: 华电集团招标采购公告、采购信息与供应商业务入口。
     enabled: true
-    parser: generic_html
+    parser: browser_required
+    access_note: 该入口返回 412 JS/WAF 校验页；需要浏览器自动化或人工登录 Cookie。
 
   - id: spic
     group: 五大
@@ -85,9 +87,10 @@ sources:
     company: 华润集团 / 华润电力
     platform: 华润集团守正电子招标采购平台
     urls:
+      - https://www.szecp.com.cn/
+      - https://www.szecp.com.cn/first_zbgg/index.html
       - https://szecp.crc.com.cn/
-      - https://www.crpsz.com/
-    notes: 守正平台为华润集团招标采购业务入口，crpsz 可用于公告浏览。
+    notes: 守正平台为华润集团招标采购业务入口；www.crpsz.com 证书域名不匹配，已改用 szecp 官方新域名。
     enabled: true
     parser: generic_html
 
@@ -110,4 +113,3 @@ sources:
     notes: 中核集团及下属单位设备物资采购、招标公告入口。
     enabled: true
     parser: generic_html
-

@@ -142,6 +142,27 @@ and optionally sending pending notifications to a webhook.
 
 不同网站页面结构不同，需要分别编写对应的抓取逻辑。
 
+### 7. 平台访问限制说明
+
+当前已修正华润守正平台入口：
+
+```text
+https://www.szecp.com.cn/
+```
+
+不再使用证书异常的旧入口：
+
+```text
+https://www.crpsz.com/
+```
+
+华能电子商务和华电电子商务当前会返回 `412`，这是平台侧 JS/WAF 校验页面，不是普通 URL 拼写错误。普通 `requests` 爬虫无法直接读取，需要后续接入浏览器自动化、人工登录 Cookie，或找到平台公开接口后再做专用适配。
+
+```text
+https://ec.chng.com.cn/channel/home/#/purchase?top=0
+https://www.chdtp.com/
+```
+
 ## Features
 
 - YAML-driven keyword, company, and runtime configuration

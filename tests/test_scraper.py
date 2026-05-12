@@ -3,6 +3,7 @@ from src.source_config import TenderSource
 
 
 class FakeResponse:
+    status_code = 200
     url = "https://example.com/list"
     encoding = "utf-8"
     apparent_encoding = "utf-8"
@@ -99,3 +100,26 @@ def test_extracts_published_date_from_title() -> None:
 
 def test_clean_text_removes_private_use_characters() -> None:
     assert clean_text("公告\ue638标题") == "公告标题"
+
+
+def test_configured_source_scraper_handles_waf_412(monkeypatch) -> None:
+    class WafResponse(FakeResponse):
+        status_code = 412
+        text = "<html>WAF</html>"
+
+    def fake_get(*args, **kwargs):
+        return WafResponse()
+
+    monkeypatch.setattr("src.scraper.requests.get", fake_get)
+    scraper = ConfiguredSourceScraper(
+        TenderSource(
+            id="waf",
+            group="测试",
+            company="测试公司",
+            platform="受限平台",
+            urls=("https://example.com/waf",),
+        ),
+        keyword_config={"target_topics": ["光伏"]},
+    )
+
+    assert scraper.crawl() == []
