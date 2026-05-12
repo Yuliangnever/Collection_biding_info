@@ -90,6 +90,36 @@ def extract_published_date(title: str, url: str = "") -> str:
     return f"{int(year):04d}-{int(month):02d}-{int(day):02d}"
 
 
+RESULT_NOTICE_WORDS = (
+    "中标",
+    "成交",
+    "结果",
+    "候选人",
+    "预成交",
+    "终止",
+    "废标",
+    "流标",
+    "失败",
+)
+
+PROCUREMENT_NOTICE_WORDS = (
+    "招标",
+    "采购",
+    "询价",
+    "询比",
+    "竞价",
+    "磋商",
+    "谈判",
+    "征集",
+)
+
+
+def is_procurement_notice(title: str) -> bool:
+    if any(word in title for word in RESULT_NOTICE_WORDS):
+        return False
+    return any(word in title for word in PROCUREMENT_NOTICE_WORDS)
+
+
 class DemoTenderScraper:
     source = "示例数据源"
 
@@ -103,7 +133,7 @@ class DemoTenderScraper:
                 published_at=today,
             ),
             TenderItem(
-                title="南方电网储能系统项目中标候选人公示",
+                title="南方电网储能系统项目采购公告",
                 url="demo://storage-002",
                 source=self.source,
                 published_at=today,
@@ -168,14 +198,9 @@ class ConfiguredSourceScraper:
                 timeout=self.timeout,
             )
             if response.status_code == 412:
-                print(
-                    f"抓取受限：{self.source} {url} 返回 412，"
-                    "该平台需要浏览器执行 JS/WAF 校验，普通 HTTP 爬虫无法直接读取。"
-                )
                 return []
             response.raise_for_status()
         except requests.RequestException as exc:
-            print(f"抓取失败：{self.source} {url} - {exc}")
             return []
 
         if not response.encoding or response.encoding.lower() == "iso-8859-1":
@@ -185,7 +210,7 @@ class ConfiguredSourceScraper:
         return parser.links
 
     def _is_relevant_title(self, title: str) -> bool:
-        if not any(word in title for word in ("招标", "采购", "中标", "成交", "公示")):
+        if not is_procurement_notice(title):
             return False
         return any(keyword in title for keyword in self.target_keywords)
 
@@ -195,10 +220,10 @@ class ConfiguredSourceScraper:
         listing_markers = (
             "招标公告",
             "采购公告",
-            "中标公示",
-            "成交公告",
             "招标采购",
             "采购信息",
+            "询价",
+            "询比",
             "jyxx",
             "notice",
             "bulletin",

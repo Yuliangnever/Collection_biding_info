@@ -10,9 +10,11 @@ keywords:
   must_include:
     - 招标
     - 采购
-    - 中标
-    - 成交
-    - 公示
+    - 询价
+    - 询比
+    - 竞价
+    - 磋商
+    - 谈判
   categories:
     generation:
       - 风电

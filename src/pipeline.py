@@ -5,7 +5,7 @@ from datetime import date
 from src.models import TenderItem
 from src.notifier import WebhookNotifier
 from src.parser import enrich_matches
-from src.scraper import DemoTenderScraper, build_scrapers
+from src.scraper import DemoTenderScraper, build_scrapers, is_procurement_notice
 from src.source_config import load_enabled_sources
 from src.storage import TenderStorage
 
@@ -81,6 +81,8 @@ class TenderPipeline:
             if limit is not None and notified >= limit:
                 break
             if item.source == DemoTenderScraper.source and not allow_demo:
+                continue
+            if not is_procurement_notice(item.title):
                 continue
             if notify_today_only and item.published_at != today:
                 continue

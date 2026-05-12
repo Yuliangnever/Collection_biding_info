@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from src.models import TenderItem
+from src.notifier import WebhookNotifier
 from src.pipeline import TenderPipeline
 from tests.test_helpers import fresh_test_database
 
@@ -118,6 +119,45 @@ def test_push_pending_skips_non_today_items_by_default() -> None:
     assert notifier.sent == []
 
 
+def test_push_pending_skips_result_notices() -> None:
+    pipeline = TenderPipeline(
+        {
+            "database_path": fresh_test_database("notification-result.sqlite3"),
+            "webhook_url": "",
+            "request_timeout": 1,
+            "demo_source_enabled": False,
+            "allow_demo_notifications": False,
+            "notify_today_only": True,
+            "keywords": {},
+            "companies": [],
+            "sources": [],
+        }
+    )
+    pipeline.storage.save_many(
+        [
+            TenderItem(
+                title="风电项目中标候选人公示",
+                url="https://example.com/notice/result",
+                source="测试平台",
+                published_at=date.today().isoformat(),
+            ),
+            TenderItem(
+                title="光伏项目采购招标公告",
+                url="https://example.com/notice/procurement",
+                source="测试平台",
+                published_at=date.today().isoformat(),
+            ),
+        ]
+    )
+    notifier = RecordingNotifier()
+    pipeline.notifier = notifier
+
+    summary = pipeline.push_pending()
+
+    assert summary == {"notified": 1}
+    assert notifier.sent == ["光伏项目采购招标公告"]
+
+
 def test_preview_today_returns_messages_without_notifying() -> None:
     pipeline = TenderPipeline(
         {
@@ -157,3 +197,21 @@ def test_preview_today_returns_messages_without_notifying() -> None:
     assert result["inserted"] == 1
     assert len(result["messages"]) == 1
     assert "光伏项目采购招标公告" in result["messages"][0]
+    assert "匹配公司" not in result["messages"][0]
+
+
+def test_tender_message_does_not_include_matched_company() -> None:
+    notifier = WebhookNotifier(webhook_url="")
+    message = notifier.format_tender_message(
+        TenderItem(
+            title="光伏项目采购招标公告",
+            url="https://example.com/pv",
+            source="测试平台",
+            published_at=date.today().isoformat(),
+            matched_keywords=["光伏", "采购", "招标"],
+            matched_companies=["测试公司"],
+        )
+    )
+
+    assert "匹配公司" not in message
+    assert "测试公司" not in message

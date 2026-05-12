@@ -47,7 +47,6 @@ class WebhookNotifier:
                 f"来源：{item.source}",
                 f"发布时间：{item.published_at}",
                 f"关键词：{'、'.join(item.matched_keywords) or '无'}",
-                f"匹配公司：{'、'.join(item.matched_companies) or '无'}",
                 f"链接：{item.url}",
             ]
         )
