@@ -331,3 +331,9 @@ Expected result:
 The default scraper is intentionally conservative and ships with demo tender
 items so the project can run immediately. Replace `DemoTenderScraper` with real
 site-specific implementations when you are ready to connect production sources.
+
+See the real source integration framework:
+
+```text
+docs/real_source_scraper_framework.md
+```

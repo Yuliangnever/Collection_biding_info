@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from src.models import TenderItem
 from src.notifier import WebhookNotifier
 from src.parser import enrich_matches
-from src.scraper import DemoTenderScraper
+from src.scraper import DemoTenderScraper, build_scrapers
+from src.source_config import load_enabled_sources
 from src.storage import TenderStorage
 
 
@@ -12,7 +14,12 @@ class TenderPipeline:
     def __init__(self, settings: dict[str, object]) -> None:
         self.settings = settings
         self.storage = TenderStorage(str(settings["database_path"]))
-        self.scraper = DemoTenderScraper()
+        sources = load_enabled_sources(settings.get("sources", []))
+        self.scrapers = build_scrapers(
+            sources,
+            request_timeout=int(settings.get("request_timeout", 20)),
+            demo_source_enabled=bool(settings.get("demo_source_enabled", True)),
+        )
         self.notifier = WebhookNotifier(
             webhook_url=str(settings.get("webhook_url", "")),
             timeout=int(settings.get("request_timeout", 20)),
@@ -34,7 +41,9 @@ class TenderPipeline:
         return {"sent": int(self.notifier.send_test_message())}
 
     def run_once(self, notify: bool) -> dict[str, int]:
-        raw_items = self.scraper.crawl()
+        raw_items: list[TenderItem] = []
+        for scraper in self.scrapers:
+            raw_items.extend(scraper.crawl())
         enriched_items = [
             enrich_matches(
                 item,
@@ -60,4 +69,3 @@ class TenderPipeline:
                 self.storage.mark_notified(item)
                 notified += 1
         return notified
-

@@ -1,0 +1,113 @@
+sources:
+  - id: chnenergy
+    group: 五大
+    company: 国家能源集团
+    platform: 国家能源招标网 / 国能e招
+    urls:
+      - https://www.chnenergybidding.com.cn/
+    notes: 国家能源集团集中招标、采购公告与中标公示的重要入口。
+    enabled: true
+    parser: generic_html
+
+  - id: huaneng
+    group: 五大
+    company: 中国华能集团
+    platform: 华能电子商务平台
+    urls:
+      - https://ec.chng.com.cn/
+    notes: 华能集团招标采购、供应商注册、公告检索入口。
+    enabled: true
+    parser: generic_html
+
+  - id: datang
+    group: 五大
+    company: 中国大唐集团
+    platform: 大唐集团电子商务平台
+    urls:
+      - https://www.cdt-ec.com/
+    notes: 大唐集团招标采购公告、澄清变更、中标公示入口。
+    enabled: true
+    parser: generic_html
+
+  - id: huadian
+    group: 五大
+    company: 中国华电集团
+    platform: 华电集团电子商务平台
+    urls:
+      - https://www.chdtp.com/
+    notes: 华电集团招标采购公告、采购信息与供应商业务入口。
+    enabled: true
+    parser: generic_html
+
+  - id: spic
+    group: 五大
+    company: 国家电力投资集团
+    platform: 国家电投电子商务平台 / 电能e招采
+    urls:
+      - https://www.espic.com.cn/
+      - https://ebid.espic.com.cn/
+    notes: espic 为电子商务平台总入口，ebid 为招标采购公告与业务办理常用入口。
+    enabled: true
+    parser: generic_html
+
+  - id: sdic
+    group: 六小
+    company: 国投集团 / 国投电力
+    platform: 国投集团电子采购平台
+    urls:
+      - https://www.sdicc.com.cn/
+    notes: 国投集团及下属企业采购、招标、询比等公告入口。
+    enabled: true
+    parser: generic_html
+
+  - id: ctg
+    group: 六小
+    company: 中国三峡集团
+    platform: 中国三峡集团电子采购平台
+    urls:
+      - https://eps.ctg.com.cn/
+    notes: 三峡集团集中采购、招标公告和结果公示入口。
+    enabled: true
+    parser: generic_html
+
+  - id: cgn
+    group: 六小
+    company: 中国广核集团
+    platform: 中广核电子商务平台
+    urls:
+      - https://ecp.cgnpc.com.cn/
+    notes: 中广核集团及下属单位招采公告、供应商业务入口。
+    enabled: true
+    parser: generic_html
+
+  - id: cr-power
+    group: 六小
+    company: 华润集团 / 华润电力
+    platform: 华润集团守正电子招标采购平台
+    urls:
+      - https://szecp.crc.com.cn/
+      - https://www.crpsz.com/
+    notes: 守正平台为华润集团招标采购业务入口，crpsz 可用于公告浏览。
+    enabled: true
+    parser: generic_html
+
+  - id: cecep
+    group: 六小
+    company: 中国节能环保集团
+    platform: 中国节能电子采购平台
+    urls:
+      - https://www.ebidding.cecep.cn/
+    notes: 中节能集团采购公告、成交/中标公示与供应商注册入口。
+    enabled: true
+    parser: generic_html
+
+  - id: cnnc
+    group: 六小
+    company: 中国核工业集团
+    platform: 中核集团电子采购平台
+    urls:
+      - https://www.cnncecp.com/
+    notes: 中核集团及下属单位设备物资采购、招标公告入口。
+    enabled: true
+    parser: generic_html
+

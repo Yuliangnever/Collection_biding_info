@@ -44,4 +44,5 @@ def load_settings() -> dict[str, Any]:
 
     settings["companies"] = _load_yaml("config/companies.yaml").get("companies", [])
     settings["keywords"] = _load_yaml("config/keywords.yaml").get("keywords", {})
+    settings["sources"] = _load_yaml("config/sources.yaml").get("sources", [])
     return settings
