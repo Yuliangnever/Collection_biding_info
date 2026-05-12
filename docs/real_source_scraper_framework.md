@@ -73,7 +73,7 @@ src/scraper.py
 
 - `TenderScraper`：抓取器接口
 - `DemoTenderScraper`：示例数据源
-- `ConfiguredSourceScraper`：真实平台占位抓取器
+- `ConfiguredSourceScraper`：通用真实平台 HTML 链接抓取器
 - `build_scrapers()`：根据配置组装多个抓取器
 
 ### 3. 主流程
@@ -191,9 +191,14 @@ created_at
 & C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" list-latest --limit 10
 ```
 
+限量推送 1 条待通知消息：
+
+```powershell
+& C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" push-pending --limit 1
+```
+
 测试企业微信：
 
 ```powershell
 & C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" test-wecom
 ```
-

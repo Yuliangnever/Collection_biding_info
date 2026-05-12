@@ -1,4 +1,12 @@
 keywords:
+  target_topics:
+    - 光伏
+    - 风电
+    - 储能
+    - 柔性支架
+    - 漂浮光伏
+    - 水面光伏
+    - 海上光伏
   must_include:
     - 招标
     - 采购

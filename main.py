@@ -14,7 +14,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("run-once", help="crawl, persist, and notify")
     subparsers.add_parser("crawl-only", help="crawl and persist without notifying")
-    subparsers.add_parser("push-pending", help="send pending notifications")
+    push_pending = subparsers.add_parser(
+        "push-pending", help="send pending notifications"
+    )
+    push_pending.add_argument("--limit", type=int, default=None)
     subparsers.add_parser("test-wecom", help="send a WeCom webhook test message")
 
     latest = subparsers.add_parser("list-latest", help="print latest tender items")
@@ -33,11 +36,6 @@ def main() -> None:
     args = build_parser().parse_args()
     settings = load_settings()
     pipeline = TenderPipeline(settings)
-    startup_sent = pipeline.send_startup_message(args.command)
-    if startup_sent:
-        print("企业微信启动通知已发送")
-    else:
-        print("未配置 WEBHOOK_URL，跳过企业微信启动通知")
 
     if args.command == "test-wecom":
         _print_json(pipeline.send_test_message())
@@ -52,7 +50,7 @@ def main() -> None:
         return
 
     if args.command == "push-pending":
-        _print_json(pipeline.push_pending())
+        _print_json(pipeline.push_pending(limit=args.limit))
         return
 
     if args.command == "list-latest":
@@ -69,4 +67,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

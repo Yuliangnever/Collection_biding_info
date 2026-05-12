@@ -1,5 +1,8 @@
 database_path: data/tenders.sqlite3
 webhook_url: ""
 request_timeout: 20
-demo_source_enabled: true
+demo_source_enabled: false
 allow_demo_notifications: false
+max_items_per_source: 50
+max_notifications_per_run: 10
+max_pages_per_source: 5

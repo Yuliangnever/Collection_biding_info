@@ -35,6 +35,9 @@ and optionally sending pending notifications to a webhook.
 
 5. 把下面的命令复制到这个终端里，然后按回车。
 
+程序启动时不会自动向企业微信发送消息。只有运行 `test-wecom`、`run-once` 或
+`push-pending`，并且存在可推送内容时，才会调用企业微信 Webhook。
+
 ### 2. 推荐使用的 Python 命令
 
 你当前电脑上可以使用 Spyder 自带的 Python。后面的命令都可以用这个格式：
@@ -66,8 +69,10 @@ and optionally sending pending notifications to a webhook.
 发送数据库里还没有推送过的通知：
 
 ```powershell
-& C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" push-pending
+& C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" push-pending --limit 1
 ```
+
+首次验证建议保留 `--limit 1`，避免一次性推送太多消息。确认无误后可以去掉这个参数。
 
 查看最近保存的 10 条记录：
 
@@ -259,14 +264,16 @@ Send notifications for tender records that are already stored in the database
 and have not been marked as notified.
 
 ```powershell
-python main.py push-pending
+python main.py push-pending --limit 1
 ```
 
 With the Spyder Python path:
 
 ```powershell
-& C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" push-pending
+& C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" push-pending --limit 1
 ```
+
+Remove `--limit 1` only when you are ready to send all pending notifications.
 
 ### List Latest
 

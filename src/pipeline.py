@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 from src.models import TenderItem
 from src.notifier import WebhookNotifier
 from src.parser import enrich_matches
@@ -17,24 +15,15 @@ class TenderPipeline:
         sources = load_enabled_sources(settings.get("sources", []))
         self.scrapers = build_scrapers(
             sources,
+            keyword_config=dict(settings.get("keywords", {})),
             request_timeout=int(settings.get("request_timeout", 20)),
             demo_source_enabled=bool(settings.get("demo_source_enabled", True)),
+            max_items_per_source=int(settings.get("max_items_per_source", 50)),
+            max_pages_per_source=int(settings.get("max_pages_per_source", 5)),
         )
         self.notifier = WebhookNotifier(
             webhook_url=str(settings.get("webhook_url", "")),
             timeout=int(settings.get("request_timeout", 20)),
-        )
-
-    def send_startup_message(self, command: str) -> bool:
-        started_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        return self.notifier.send_text(
-            "\n".join(
-                [
-                    "Energy Tender Monitor 已启动",
-                    f"启动时间：{started_at}",
-                    f"运行命令：{command}",
-                ]
-            )
         )
 
     def send_test_message(self) -> dict[str, int]:
@@ -53,16 +42,19 @@ class TenderPipeline:
             for item in raw_items
         ]
         inserted = self.storage.save_many(enriched_items)
-        notified = self._notify_pending() if notify else 0
+        notify_limit = int(self.settings.get("max_notifications_per_run", 10))
+        notified = self._notify_pending(limit=notify_limit) if notify else 0
         return {"crawled": len(raw_items), "inserted": inserted, "notified": notified}
 
-    def push_pending(self) -> dict[str, int]:
-        return {"notified": self._notify_pending()}
+    def push_pending(self, limit: int | None = None) -> dict[str, int]:
+        return {"notified": self._notify_pending(limit=limit)}
 
-    def _notify_pending(self) -> int:
+    def _notify_pending(self, limit: int | None = None) -> int:
         notified = 0
         allow_demo = bool(self.settings.get("allow_demo_notifications", False))
         for item in self.storage.list_pending():
+            if limit is not None and notified >= limit:
+                break
             if item.source == DemoTenderScraper.source and not allow_demo:
                 continue
             if self.notifier.send(item):

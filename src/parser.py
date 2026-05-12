@@ -30,6 +30,21 @@ def configured_keywords(keyword_config: dict[str, object]) -> list[str]:
     return keywords
 
 
+def target_topic_keywords(keyword_config: dict[str, object]) -> list[str]:
+    keywords = _collect_keywords(keyword_config.get("target_topics", []))
+    if keywords:
+        return keywords
+    return [
+        "光伏",
+        "风电",
+        "储能",
+        "柔性支架",
+        "漂浮光伏",
+        "水面光伏",
+        "海上光伏",
+    ]
+
+
 def enrich_matches(
     item: TenderItem,
     keyword_config: dict[str, object],
@@ -47,4 +62,3 @@ def enrich_matches(
             _append_unique(matched_companies, canonical_name)
     item.matched_companies = matched_companies
     return item
-
