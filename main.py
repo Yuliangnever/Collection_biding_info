@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import time
 
 from src.config_loader import load_settings
 from src.pipeline import TenderPipeline
@@ -29,6 +28,11 @@ def main() -> None:
     args = build_parser().parse_args()
     settings = load_settings()
     pipeline = TenderPipeline(settings)
+    startup_sent = pipeline.send_startup_message(args.command)
+    if startup_sent:
+        print("企业微信启动通知已发送")
+    else:
+        print("未配置 WEBHOOK_URL，跳过企业微信启动通知")
 
     if args.command == "run-once":
         summary = pipeline.run_once(notify=True)

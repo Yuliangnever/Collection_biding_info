@@ -12,19 +12,31 @@ class WebhookNotifier:
         self.webhook_url = webhook_url
         self.timeout = timeout
 
-    def send(self, item: TenderItem) -> bool:
+    def send_text(self, content: str) -> bool:
         if not self.webhook_url:
             return False
 
         payload: dict[str, Any] = {
-            "title": item.title,
-            "url": item.url,
-            "source": item.source,
-            "published_at": item.published_at,
-            "matched_keywords": item.matched_keywords,
-            "matched_companies": item.matched_companies,
+            "msgtype": "text",
+            "text": {"content": content},
         }
         response = requests.post(self.webhook_url, json=payload, timeout=self.timeout)
         response.raise_for_status()
+        result = response.json()
+        if result.get("errcode") != 0:
+            raise RuntimeError(f"WeCom webhook failed: {result}")
         return True
 
+    def send(self, item: TenderItem) -> bool:
+        content = "\n".join(
+            [
+                "Energy Tender Monitor 招标信息提醒",
+                f"标题：{item.title}",
+                f"链接：{item.url}",
+                f"来源：{item.source}",
+                f"发布时间：{item.published_at}",
+                f"关键词：{', '.join(item.matched_keywords) or '无'}",
+                f"匹配公司：{', '.join(item.matched_companies) or '无'}",
+            ]
+        )
+        return self.send_text(content)

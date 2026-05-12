@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from src.notifier import WebhookNotifier
 from src.parser import enrich_matches
 from src.scraper import DemoTenderScraper
@@ -14,6 +16,18 @@ class TenderPipeline:
         self.notifier = WebhookNotifier(
             webhook_url=str(settings.get("webhook_url", "")),
             timeout=int(settings.get("request_timeout", 20)),
+        )
+
+    def send_startup_message(self, command: str) -> bool:
+        started_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return self.notifier.send_text(
+            "\n".join(
+                [
+                    "Energy Tender Monitor 已启动",
+                    f"启动时间：{started_at}",
+                    f"运行命令：{command}",
+                ]
+            )
         )
 
     def run_once(self, notify: bool) -> dict[str, int]:
@@ -40,4 +54,3 @@ class TenderPipeline:
                 self.storage.mark_notified(item)
                 notified += 1
         return notified
-
