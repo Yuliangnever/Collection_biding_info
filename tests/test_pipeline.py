@@ -1,12 +1,11 @@
-from pathlib import Path
-
 from src.pipeline import TenderPipeline
+from tests.test_helpers import fresh_test_database
 
 
-def test_pipeline_crawls_and_persists(tmp_path: Path) -> None:
+def test_pipeline_crawls_and_persists() -> None:
     pipeline = TenderPipeline(
         {
-            "database_path": str(tmp_path / "tenders.sqlite3"),
+            "database_path": fresh_test_database("pipeline.sqlite3"),
             "webhook_url": "",
             "request_timeout": 1,
             "allow_demo_notifications": False,

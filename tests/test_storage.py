@@ -1,15 +1,14 @@
-from pathlib import Path
-
 from src.models import TenderItem
 from src.storage import TenderStorage
+from tests.test_helpers import fresh_test_database
 
 
-def test_storage_deduplicates_items(tmp_path: Path) -> None:
-    storage = TenderStorage(str(tmp_path / "tenders.sqlite3"))
+def test_storage_deduplicates_items() -> None:
+    storage = TenderStorage(fresh_test_database("storage.sqlite3"))
     item = TenderItem(
         title="招标公告",
-        url="https://example.com/demo",
-        source="demo",
+        url="demo://storage-test",
+        source="测试",
         published_at="2026-05-12",
     )
 
