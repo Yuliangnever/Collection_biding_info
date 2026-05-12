@@ -38,8 +38,8 @@ class WebhookNotifier:
             )
         )
 
-    def send(self, item: TenderItem) -> bool:
-        content = "\n".join(
+    def format_tender_message(self, item: TenderItem) -> str:
+        return "\n".join(
             [
                 "招标信息提醒",
                 "",
@@ -51,5 +51,6 @@ class WebhookNotifier:
                 f"链接：{item.url}",
             ]
         )
-        return self.send_text(content)
 
+    def send(self, item: TenderItem) -> bool:
+        return self.send_text(self.format_tender_message(item))

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 from src.models import TenderItem
 from src.notifier import WebhookNotifier
 from src.parser import enrich_matches
@@ -29,11 +31,11 @@ class TenderPipeline:
     def send_test_message(self) -> dict[str, int]:
         return {"sent": int(self.notifier.send_test_message())}
 
-    def run_once(self, notify: bool) -> dict[str, int]:
+    def crawl_items(self) -> list[TenderItem]:
         raw_items: list[TenderItem] = []
         for scraper in self.scrapers:
             raw_items.extend(scraper.crawl())
-        enriched_items = [
+        return [
             enrich_matches(
                 item,
                 keyword_config=dict(self.settings.get("keywords", {})),
@@ -41,10 +43,31 @@ class TenderPipeline:
             )
             for item in raw_items
         ]
+
+    def run_once(self, notify: bool) -> dict[str, int]:
+        enriched_items = self.crawl_items()
         inserted = self.storage.save_many(enriched_items)
         notify_limit = int(self.settings.get("max_notifications_per_run", 10))
         notified = self._notify_pending(limit=notify_limit) if notify else 0
-        return {"crawled": len(raw_items), "inserted": inserted, "notified": notified}
+        return {"crawled": len(enriched_items), "inserted": inserted, "notified": notified}
+
+    def preview_today(self, topics: list[str]) -> dict[str, object]:
+        today = date.today().isoformat()
+        items = [
+            item
+            for item in self.crawl_items()
+            if item.published_at == today
+            and any(topic in item.title or topic in item.matched_keywords for topic in topics)
+        ]
+        inserted = self.storage.save_many(items)
+        messages = [self.notifier.format_tender_message(item) for item in items]
+        return {
+            "date": today,
+            "topics": topics,
+            "crawled": len(items),
+            "inserted": inserted,
+            "messages": messages,
+        }
 
     def push_pending(self, limit: int | None = None) -> dict[str, int]:
         return {"notified": self._notify_pending(limit=limit)}
@@ -52,10 +75,14 @@ class TenderPipeline:
     def _notify_pending(self, limit: int | None = None) -> int:
         notified = 0
         allow_demo = bool(self.settings.get("allow_demo_notifications", False))
+        today = date.today().isoformat()
+        notify_today_only = bool(self.settings.get("notify_today_only", True))
         for item in self.storage.list_pending():
             if limit is not None and notified >= limit:
                 break
             if item.source == DemoTenderScraper.source and not allow_demo:
+                continue
+            if notify_today_only and item.published_at != today:
                 continue
             if self.notifier.send(item):
                 self.storage.mark_notified(item)

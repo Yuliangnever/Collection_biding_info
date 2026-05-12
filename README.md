@@ -80,6 +80,12 @@ and optionally sending pending notifications to a webhook.
 & C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" list-latest --limit 10
 ```
 
+抓取今天发布的光伏、风电信息，只在终端预览消息，不推送企业微信：
+
+```powershell
+& C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" preview-today --topics 光伏 风电
+```
+
 测试企业微信机器人是否能收到消息：
 
 ```powershell
@@ -274,6 +280,21 @@ With the Spyder Python path:
 ```
 
 Remove `--limit 1` only when you are ready to send all pending notifications.
+
+### Preview Today
+
+Crawl today's tender notices for selected topics, save them locally, and print
+message previews in the terminal without sending WeCom notifications.
+
+```powershell
+python main.py preview-today --topics 光伏 风电
+```
+
+With the Spyder Python path:
+
+```powershell
+& C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" preview-today --topics 光伏 风电
+```
 
 ### List Latest
 

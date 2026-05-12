@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 
 from src.config_loader import load_settings
 from src.pipeline import TenderPipeline
@@ -14,6 +15,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("run-once", help="crawl, persist, and notify")
     subparsers.add_parser("crawl-only", help="crawl and persist without notifying")
+    preview_today = subparsers.add_parser(
+        "preview-today",
+        help="crawl today's tender notices and print message previews without notifying",
+    )
+    preview_today.add_argument("--topics", nargs="+", default=["光伏", "风电"])
     push_pending = subparsers.add_parser(
         "push-pending", help="send pending notifications"
     )
@@ -33,6 +39,8 @@ def _print_json(data: object) -> None:
 
 
 def main() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="replace")
     args = build_parser().parse_args()
     settings = load_settings()
     pipeline = TenderPipeline(settings)
@@ -47,6 +55,23 @@ def main() -> None:
 
     if args.command == "crawl-only":
         _print_json(pipeline.run_once(notify=False))
+        return
+
+    if args.command == "preview-today":
+        result = pipeline.preview_today(topics=args.topics)
+        print(
+            f"今日招标信息预览：日期={result['date']}，主题={','.join(result['topics'])}，"
+            f"抓取到={result['crawled']}，新增入库={result['inserted']}，不会推送企业微信"
+        )
+        messages = result["messages"]
+        if not messages:
+            print("没有找到符合条件的今日招标信息。")
+            return
+        for index, message in enumerate(messages, start=1):
+            print("\n" + "=" * 80)
+            print(f"消息 {index}")
+            print("=" * 80)
+            print(message)
         return
 
     if args.command == "push-pending":

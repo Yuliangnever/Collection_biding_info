@@ -1,4 +1,4 @@
-from src.scraper import ConfiguredSourceScraper
+from src.scraper import ConfiguredSourceScraper, clean_text, extract_published_date
 from src.source_config import TenderSource
 
 
@@ -83,3 +83,19 @@ def test_configured_source_scraper_rejects_non_target_procurement(monkeypatch) -
     items = scraper.crawl()
 
     assert [item.title for item in items] == ["漂浮光伏项目采购公告"]
+
+
+def test_extracts_published_date_from_title() -> None:
+    assert extract_published_date("风电项目招标公告 2026-05-12") == "2026-05-12"
+    assert extract_published_date("光伏项目中标公示 2026年5月2日") == "2026-05-02"
+    assert (
+        extract_published_date(
+            "光伏项目采购公告",
+            "https://example.com/notice/20260512/demo.html",
+        )
+        == "2026-05-12"
+    )
+
+
+def test_clean_text_removes_private_use_characters() -> None:
+    assert clean_text("公告\ue638标题") == "公告标题"

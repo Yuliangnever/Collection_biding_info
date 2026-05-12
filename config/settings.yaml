@@ -6,3 +6,4 @@ allow_demo_notifications: false
 max_items_per_source: 50
 max_notifications_per_run: 10
 max_pages_per_source: 5
+notify_today_only: true

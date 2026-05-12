@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from html.parser import HTMLParser
+import re
 from typing import Protocol
+import unicodedata
 from urllib.parse import urljoin
 
 import requests
@@ -52,10 +54,28 @@ class TenderLinkParser(HTMLParser):
         if tag.lower() != "a" or not self._href_stack:
             return
         href = self._href_stack.pop()
-        title = " ".join("".join(self._text_parts).split())
+        title = clean_text(" ".join("".join(self._text_parts).split()))
         self._text_parts = []
         if title and href.startswith(("http://", "https://")):
             self.links.append(LinkCandidate(title=title, url=href))
+
+
+def clean_text(text: str) -> str:
+    return "".join(
+        char
+        for char in text
+        if unicodedata.category(char) not in {"Cc", "Cf", "Co", "Cs"}
+    ).strip()
+
+
+def extract_published_date(title: str, url: str = "") -> str:
+    match = re.search(r"(20\d{2})[-/.年](\d{1,2})[-/.月](\d{1,2})日?", title)
+    if not match and url:
+        match = re.search(r"(20\d{2})[-/.]?(\d{2})[-/.]?(\d{2})", url)
+    if not match:
+        return date.today().isoformat()
+    year, month, day = match.groups()
+    return f"{int(year):04d}-{int(month):02d}-{int(day):02d}"
 
 
 class DemoTenderScraper:
@@ -121,7 +141,7 @@ class ConfiguredSourceScraper:
                         title=candidate.title,
                         url=candidate.url,
                         source=self.source,
-                        published_at=date.today().isoformat(),
+                        published_at=extract_published_date(candidate.title, candidate.url),
                     )
                 )
                 if len(items) >= self.max_items:
