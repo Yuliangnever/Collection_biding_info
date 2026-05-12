@@ -32,22 +32,22 @@ def main() -> None:
 
     if args.command == "run-once":
         summary = pipeline.run_once(notify=True)
-        print(json.dumps(summary, ensure_ascii=True, indent=2))
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
         return
 
     if args.command == "crawl-only":
         summary = pipeline.run_once(notify=False)
-        print(json.dumps(summary, ensure_ascii=True, indent=2))
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
         return
 
     if args.command == "push-pending":
         summary = pipeline.push_pending()
-        print(json.dumps(summary, ensure_ascii=True, indent=2))
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
         return
 
     if args.command == "list-latest":
         items = pipeline.storage.list_latest(args.limit)
-        print(json.dumps([item.to_dict() for item in items], ensure_ascii=True, indent=2))
+        print(json.dumps([item.to_dict() for item in items], ensure_ascii=False, indent=2))
         return
 
     if args.command == "schedule":
@@ -59,4 +59,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
