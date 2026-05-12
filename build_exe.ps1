@@ -6,6 +6,7 @@ $condaBin = "C:/ProgramData/spyder-6/envs/spyder-runtime/Library/bin"
 & $python -m PyInstaller `
   --noconfirm `
   --clean `
+  --onefile `
   --noconsole `
   --name TenderMonitor `
   --add-data "config;config" `
@@ -20,5 +21,4 @@ $condaBin = "C:/ProgramData/spyder-6/envs/spyder-runtime/Library/bin"
   --add-binary "$condaBin/yaml.dll;." `
   app_gui.py
 
-Write-Host "Build completed: dist/TenderMonitor/TenderMonitor.exe"
-
+Write-Host "Build completed: dist/TenderMonitor.exe"

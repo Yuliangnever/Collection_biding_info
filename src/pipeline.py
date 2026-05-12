@@ -54,11 +54,26 @@ class TenderPipeline:
         return {"crawled": len(enriched_items), "inserted": inserted, "notified": notified}
 
     def preview_today(self, topics: list[str]) -> dict[str, object]:
-        items = self._filter_today_topics(self.crawl_items(), topics)
+        today = date.today().isoformat()
+        return self.preview_range(topics, today, today)
+
+    def preview_range(
+        self,
+        topics: list[str],
+        start_date: str,
+        end_date: str,
+    ) -> dict[str, object]:
+        items = self._filter_date_range_topics(
+            self.crawl_items(),
+            topics,
+            start_date,
+            end_date,
+        )
         inserted = self.storage.save_many(items)
         messages = [self.notifier.format_tender_message(item) for item in items]
         return {
-            "date": date.today().isoformat(),
+            "start_date": start_date,
+            "end_date": end_date,
             "topics": topics,
             "crawled": len(items),
             "inserted": inserted,
@@ -79,15 +94,41 @@ class TenderPipeline:
         notified = self._notify_pending(limit=limit, topics=topics)
         return {"crawled": len(items), "inserted": inserted, "notified": notified}
 
+    def notify_range_topics(
+        self,
+        topics: list[str],
+        start_date: str,
+        end_date: str,
+        limit: int | None = None,
+    ) -> dict[str, int]:
+        items = self._filter_date_range_topics(
+            self.crawl_items(),
+            topics,
+            start_date,
+            end_date,
+        )
+        inserted = self.storage.save_many(items)
+        notified = self._notify_pending(
+            limit=limit,
+            topics=topics,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return {"crawled": len(items), "inserted": inserted, "notified": notified}
+
     def _notify_pending(
         self,
         limit: int | None = None,
         topics: list[str] | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
     ) -> int:
         notified = 0
         allow_demo = bool(self.settings.get("allow_demo_notifications", False))
         today = date.today().isoformat()
         notify_today_only = bool(self.settings.get("notify_today_only", True))
+        if start_date and end_date:
+            notify_today_only = False
         for item in self.storage.list_pending():
             if limit is not None and notified >= limit:
                 break
@@ -96,6 +137,8 @@ class TenderPipeline:
             if not is_procurement_notice(item.title):
                 continue
             if notify_today_only and item.published_at != today:
+                continue
+            if start_date and end_date and not (start_date <= item.published_at <= end_date):
                 continue
             if topics and not self._matches_topics(item, topics):
                 continue
@@ -114,10 +157,19 @@ class TenderPipeline:
         topics: list[str],
     ) -> list[TenderItem]:
         today = date.today().isoformat()
+        return self._filter_date_range_topics(items, topics, today, today)
+
+    def _filter_date_range_topics(
+        self,
+        items: list[TenderItem],
+        topics: list[str],
+        start_date: str,
+        end_date: str,
+    ) -> list[TenderItem]:
         return [
             item
             for item in items
-            if item.published_at == today
+            if start_date <= item.published_at <= end_date
             and is_procurement_notice(item.title)
             and self._matches_topics(item, topics)
         ]

@@ -10,23 +10,25 @@ and optionally sending pending notifications to a webhook.
 
 ### Windows EXE 图形界面
 
-已经可以打包为 Windows 可执行程序。打包后的程序位置：
+已经可以打包为 Windows 单文件可执行程序。打包后的程序位置：
 
 ```text
-D:\Python Code\Tender Information\dist\TenderMonitor\TenderMonitor.exe
+D:\Python Code\Tender Information\dist\TenderMonitor.exe
 ```
 
-双击 `TenderMonitor.exe` 后可以使用这些功能：
+这个 `TenderMonitor.exe` 可以单独复制到其他 Windows 电脑运行，不需要一起复制整个项目文件夹。双击后可以使用这些功能：
 
-1. 获取今日招标信息：只抓取并显示今日信息，不推送企业微信。
-2. 自动运行并推送：按你设置的间隔自动抓取，并向企业微信 Webhook 推送新的招标信息。
+1. 获取招标信息：可以填写开始日期和结束日期，只显示这段时间内的招标信息，不推送企业微信。
+2. 自动运行并推送：按你设置的间隔自动抓取指定时间段信息，并向企业微信 Webhook 推送新的招标信息。
 3. 自主填写关键词：不填写时默认使用 `光伏、风电、储能、柔性支架、漂浮`。
 4. 导出 CSV：将当前搜索结果另存为 CSV 文件。
 
-如果要让 exe 推送企业微信，请在下面这个目录新建 `.env` 文件：
+当前本地打包的 exe 已经内置企业微信 Webhook，可以直接推送。源码里不会提交这个真实 key，避免上传到 GitHub 后泄露。
+
+如果以后需要替换 Webhook，可以在 `TenderMonitor.exe` 同目录新建 `.env` 文件覆盖默认配置：
 
 ```text
-D:\Python Code\Tender Information\dist\TenderMonitor\.env
+D:\Python Code\Tender Information\dist\.env
 ```
 
 `.env` 示例：
@@ -121,6 +123,12 @@ REQUEST_TIMEOUT=20
 & C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" preview-today --topics 光伏 风电 储能 柔性支架 漂浮
 ```
 
+抓取自定义时间段内的光伏、风电信息，只在终端预览消息，不推送企业微信：
+
+```powershell
+& C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" preview-today --start-date 2026-05-01 --end-date 2026-05-12 --topics 光伏 风电
+```
+
 测试企业微信机器人是否能收到消息：
 
 ```powershell
@@ -161,7 +169,7 @@ REQUEST_TIMEOUT=20
 看到下面结果就说明测试通过：
 
 ```text
-3 passed
+passed
 ```
 
 ### 6. 当前注意事项

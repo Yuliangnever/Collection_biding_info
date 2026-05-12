@@ -21,6 +21,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="crawl today's tender notices and print message previews without notifying",
     )
     preview_today.add_argument("--topics", nargs="+", default=["光伏", "风电"])
+    preview_today.add_argument("--start-date", default=None)
+    preview_today.add_argument("--end-date", default=None)
     push_pending = subparsers.add_parser(
         "push-pending", help="send pending notifications"
     )
@@ -61,9 +63,18 @@ def main() -> None:
         return
 
     if args.command == "preview-today":
-        result = pipeline.preview_today(topics=args.topics)
+        if args.start_date and args.end_date:
+            result = pipeline.preview_range(
+                topics=args.topics,
+                start_date=args.start_date,
+                end_date=args.end_date,
+            )
+            date_label = f"{result['start_date']} 至 {result['end_date']}"
+        else:
+            result = pipeline.preview_today(topics=args.topics)
+            date_label = str(result["start_date"])
         print(
-            f"今日招标信息预览：日期={result['date']}，主题={','.join(result['topics'])}，"
+            f"招标信息预览：日期={date_label}，主题={','.join(result['topics'])}，"
             f"抓取到={result['crawled']}，新增入库={result['inserted']}，不会推送企业微信"
         )
         messages = result["messages"]

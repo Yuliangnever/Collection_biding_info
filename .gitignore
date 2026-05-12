@@ -13,3 +13,4 @@ data/test/
 build/
 dist/
 *.spec
+src/embedded_config.py

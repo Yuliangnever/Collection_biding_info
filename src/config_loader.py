@@ -6,6 +6,11 @@ from typing import Any
 
 import yaml
 
+try:
+    from src.embedded_config import BUILTIN_WEBHOOK_URL
+except ImportError:
+    BUILTIN_WEBHOOK_URL = ""
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -61,12 +66,18 @@ def load_settings() -> dict[str, Any]:
     settings = _load_yaml("config/settings.yaml")
     env_values = _load_env_values()
 
+    if BUILTIN_WEBHOOK_URL:
+        settings["webhook_url"] = BUILTIN_WEBHOOK_URL
     if env_values.get("DATABASE_PATH"):
         settings["database_path"] = env_values["DATABASE_PATH"]
     if env_values.get("WEBHOOK_URL"):
         settings["webhook_url"] = env_values["WEBHOOK_URL"]
     if env_values.get("REQUEST_TIMEOUT"):
         settings["request_timeout"] = int(env_values["REQUEST_TIMEOUT"])
+
+    database_path = Path(str(settings.get("database_path", "data/tenders.sqlite3")))
+    if not database_path.is_absolute():
+        settings["database_path"] = str(_root_candidates()[0] / database_path)
 
     settings["companies"] = _load_yaml("config/companies.yaml").get("companies", [])
     settings["keywords"] = _load_yaml("config/keywords.yaml").get("keywords", {})

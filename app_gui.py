@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 import queue
 import threading
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
@@ -54,13 +54,27 @@ class TenderMonitorApp(tk.Tk):
         )
         interval_spin.grid(row=0, column=3, sticky=tk.W, padx=8)
 
+        today = date.today().isoformat()
+        ttk.Label(input_frame, text="开始日期").grid(row=1, column=0, sticky=tk.W, pady=(8, 0))
+        self.start_date_var = tk.StringVar(value=today)
+        ttk.Entry(input_frame, textvariable=self.start_date_var, width=14).grid(
+            row=1, column=1, sticky=tk.W, padx=8, pady=(8, 0)
+        )
+        ttk.Label(input_frame, text="结束日期").grid(
+            row=1, column=2, sticky=tk.W, padx=(12, 0), pady=(8, 0)
+        )
+        self.end_date_var = tk.StringVar(value=today)
+        ttk.Entry(input_frame, textvariable=self.end_date_var, width=14).grid(
+            row=1, column=3, sticky=tk.W, padx=8, pady=(8, 0)
+        )
+
         hint = (
             "不填写关键词时默认搜索："
             + "、".join(DEFAULT_TOPICS)
-            + "。多个关键词可用空格、逗号或顿号分隔。"
+            + "。多个关键词可用空格、逗号或顿号分隔。日期格式：YYYY-MM-DD。"
         )
         ttk.Label(input_frame, text=hint).grid(
-            row=1, column=0, columnspan=4, sticky=tk.W, pady=(8, 0)
+            row=2, column=0, columnspan=4, sticky=tk.W, pady=(8, 0)
         )
 
         button_frame = ttk.Frame(root)
@@ -68,8 +82,8 @@ class TenderMonitorApp(tk.Tk):
 
         ttk.Button(
             button_frame,
-            text="获取今日招标信息",
-            command=self.fetch_today,
+            text="获取招标信息",
+            command=self.fetch_range,
         ).pack(side=tk.LEFT)
         ttk.Button(
             button_frame,
@@ -104,6 +118,15 @@ class TenderMonitorApp(tk.Tk):
     def _topics(self) -> list[str]:
         return parse_topics(self.keyword_var.get())
 
+    def _date_range(self) -> tuple[str, str]:
+        start_date = self.start_date_var.get().strip() or date.today().isoformat()
+        end_date = self.end_date_var.get().strip() or start_date
+        datetime.strptime(start_date, "%Y-%m-%d")
+        datetime.strptime(end_date, "%Y-%m-%d")
+        if start_date > end_date:
+            raise ValueError("开始日期不能晚于结束日期")
+        return start_date, end_date
+
     def _pipeline(self, topics: list[str]) -> TenderPipeline:
         settings = settings_with_topics(load_settings(), topics)
         return TenderPipeline(settings)
@@ -125,16 +148,27 @@ class TenderMonitorApp(tk.Tk):
             self.output.see(tk.END)
         self.after(200, self._drain_messages)
 
-    def fetch_today(self) -> None:
+    def fetch_range(self) -> None:
         topics = self._topics()
-        self._log(f"开始获取今日招标信息，关键词：{'、'.join(topics)}")
+        try:
+            start_date, end_date = self._date_range()
+        except ValueError as exc:
+            messagebox.showerror("日期错误", str(exc))
+            return
+        self._log(
+            f"开始获取招标信息，日期：{start_date} 至 {end_date}，关键词：{'、'.join(topics)}"
+        )
 
         def worker() -> None:
             try:
-                result = self._pipeline(topics).preview_today(topics)
+                result = self._pipeline(topics).preview_range(
+                    topics,
+                    start_date,
+                    end_date,
+                )
                 self.last_items = list(result["items"])
                 summary = (
-                    f"今日招标信息：日期={result['date']}，"
+                    f"招标信息：日期={result['start_date']} 至 {result['end_date']}，"
                     f"关键词={','.join(topics)}，"
                     f"抓取到={result['crawled']}，新增入库={result['inserted']}，"
                     "不会推送企业微信\n"
@@ -142,13 +176,13 @@ class TenderMonitorApp(tk.Tk):
                 self._append_result("\n" + summary)
                 messages = list(result["messages"])
                 if not messages:
-                    self._append_result("没有找到符合条件的今日招标信息。\n")
+                    self._append_result("没有找到符合条件的招标信息。\n")
                 for index, message in enumerate(messages, start=1):
                     self._append_result(
                         "\n" + "=" * 80 + f"\n消息 {index}\n" + "=" * 80 + "\n"
                     )
                     self._append_result(message + "\n")
-                self._log("今日招标信息获取完成")
+                self._log("招标信息获取完成")
             except Exception as exc:
                 self._log(f"获取失败：{exc}")
 
@@ -160,17 +194,25 @@ class TenderMonitorApp(tk.Tk):
             return
 
         topics = self._topics()
+        try:
+            start_date, end_date = self._date_range()
+        except ValueError as exc:
+            messagebox.showerror("日期错误", str(exc))
+            return
         interval_minutes = max(int(self.interval_var.get()), 1)
         self.stop_event.clear()
         self._log(
-            f"开始自动运行，间隔 {interval_minutes} 分钟，关键词：{'、'.join(topics)}"
+            f"开始自动运行，间隔 {interval_minutes} 分钟，"
+            f"日期：{start_date} 至 {end_date}，关键词：{'、'.join(topics)}"
         )
 
         def worker() -> None:
             while not self.stop_event.is_set():
                 try:
-                    result = self._pipeline(topics).notify_today_topics(
+                    result = self._pipeline(topics).notify_range_topics(
                         topics,
+                        start_date,
+                        end_date,
                         limit=None,
                     )
                     self._log(
@@ -192,7 +234,7 @@ class TenderMonitorApp(tk.Tk):
 
     def export_csv(self) -> None:
         if not self.last_items:
-            messagebox.showinfo("提示", "请先点击“获取今日招标信息”。")
+            messagebox.showinfo("提示", "请先点击“获取招标信息”。")
             return
 
         path = filedialog.asksaveasfilename(
@@ -231,4 +273,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

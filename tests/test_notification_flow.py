@@ -200,6 +200,49 @@ def test_preview_today_returns_messages_without_notifying() -> None:
     assert "匹配公司" not in result["messages"][0]
 
 
+def test_preview_range_filters_dates() -> None:
+    pipeline = TenderPipeline(
+        {
+            "database_path": fresh_test_database("preview-range.sqlite3"),
+            "webhook_url": "",
+            "request_timeout": 1,
+            "demo_source_enabled": False,
+            "allow_demo_notifications": False,
+            "keywords": {
+                "must_include": ["招标", "采购"],
+                "categories": {"generation": ["光伏", "风电"]},
+            },
+            "companies": [],
+            "sources": [],
+        }
+    )
+    pipeline.crawl_items = lambda: [
+        TenderItem(
+            title="光伏项目采购招标公告",
+            url="https://example.com/pv-new",
+            source="测试平台",
+            published_at="2026-05-12",
+            matched_keywords=["光伏", "采购", "招标"],
+        ),
+        TenderItem(
+            title="风电项目采购招标公告",
+            url="https://example.com/wind-old",
+            source="测试平台",
+            published_at="2026-05-01",
+            matched_keywords=["风电", "采购", "招标"],
+        ),
+    ]
+
+    result = pipeline.preview_range(
+        topics=["光伏", "风电"],
+        start_date="2026-05-10",
+        end_date="2026-05-12",
+    )
+
+    assert result["crawled"] == 1
+    assert result["items"][0]["title"] == "光伏项目采购招标公告"
+
+
 def test_tender_message_does_not_include_matched_company() -> None:
     notifier = WebhookNotifier(webhook_url="")
     message = notifier.format_tender_message(
