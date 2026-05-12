@@ -10,3 +10,6 @@ __pycache__/
 logs/*.log
 data/*.sqlite3
 data/test/
+build/
+dist/
+*.spec

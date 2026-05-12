@@ -8,6 +8,41 @@ and optionally sending pending notifications to a webhook.
 
 这个项目用于监控招投标信息，按照配置里的关键词和公司名称进行匹配，把结果保存到本地 SQLite 数据库，并可以通过企业微信机器人发送通知。
 
+### Windows EXE 图形界面
+
+已经可以打包为 Windows 可执行程序。打包后的程序位置：
+
+```text
+D:\Python Code\Tender Information\dist\TenderMonitor\TenderMonitor.exe
+```
+
+双击 `TenderMonitor.exe` 后可以使用这些功能：
+
+1. 获取今日招标信息：只抓取并显示今日信息，不推送企业微信。
+2. 自动运行并推送：按你设置的间隔自动抓取，并向企业微信 Webhook 推送新的招标信息。
+3. 自主填写关键词：不填写时默认使用 `光伏、风电、储能、柔性支架、漂浮`。
+4. 导出 CSV：将当前搜索结果另存为 CSV 文件。
+
+如果要让 exe 推送企业微信，请在下面这个目录新建 `.env` 文件：
+
+```text
+D:\Python Code\Tender Information\dist\TenderMonitor\.env
+```
+
+`.env` 示例：
+
+```text
+WEBHOOK_URL=https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=你的key
+DATABASE_PATH=data/tenders.sqlite3
+REQUEST_TIMEOUT=20
+```
+
+重新打包 exe 时，在 VS Code 终端运行：
+
+```powershell
+.\build_exe.ps1
+```
+
 ### 1. 在哪里输入命令
 
 命令不是写在 `main.py` 代码文件里，而是输入在 VS Code 的终端里。
@@ -83,7 +118,7 @@ and optionally sending pending notifications to a webhook.
 抓取今天发布的光伏、风电信息，只在终端预览消息，不推送企业微信：
 
 ```powershell
-& C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" preview-today --topics 光伏 风电
+& C:/ProgramData/spyder-6/envs/spyder-runtime/python.exe "d:/Python Code/Tender Information/main.py" preview-today --topics 光伏 风电 储能 柔性支架 漂浮
 ```
 
 测试企业微信机器人是否能收到消息：

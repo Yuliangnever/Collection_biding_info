@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 from typing import Any
 
 import yaml
@@ -9,25 +10,50 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
+def _root_candidates() -> list[Path]:
+    candidates: list[Path] = []
+    if getattr(sys, "frozen", False):
+        candidates.append(Path(sys.executable).resolve().parent)
+        bundle_path = getattr(sys, "_MEIPASS", None)
+        if bundle_path:
+            candidates.append(Path(bundle_path).resolve())
+    candidates.extend([Path.cwd().resolve(), PROJECT_ROOT])
+
+    unique_candidates: list[Path] = []
+    for candidate in candidates:
+        if candidate not in unique_candidates:
+            unique_candidates.append(candidate)
+    return unique_candidates
+
+
+def _find_existing_path(relative_path: str) -> Path:
+    for root in _root_candidates():
+        path = root / relative_path
+        if path.exists():
+            return path
+    return PROJECT_ROOT / relative_path
+
+
 def _load_yaml(relative_path: str) -> dict[str, Any]:
-    path = PROJECT_ROOT / relative_path
+    path = _find_existing_path(relative_path)
     with path.open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle) or {}
 
 
 def _load_env_values() -> dict[str, str]:
     values: dict[str, str] = {}
-    for filename in (".env.example", ".env"):
-        path = PROJECT_ROOT / filename
-        if not path.exists():
-            continue
-
-        for line in path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
+    for root in reversed(_root_candidates()):
+        for filename in (".env.example", ".env"):
+            path = root / filename
+            if not path.exists():
                 continue
-            key, value = line.split("=", 1)
-            values[key.strip()] = value.strip().strip('"').strip("'")
+
+            for line in path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                values[key.strip()] = value.strip().strip('"').strip("'")
     return values
 
 

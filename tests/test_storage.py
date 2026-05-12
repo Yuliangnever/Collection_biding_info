@@ -16,3 +16,15 @@ def test_storage_deduplicates_items() -> None:
     assert storage.save_many([item]) == 0
     assert len(storage.list_latest()) == 1
 
+
+def test_storage_returns_new_items() -> None:
+    storage = TenderStorage(fresh_test_database("storage-new-items.sqlite3"))
+    item = TenderItem(
+        title="光伏项目采购招标公告",
+        url="demo://storage-new",
+        source="测试",
+        published_at="2026-05-12",
+    )
+
+    assert storage.save_many_get_new([item]) == [item]
+    assert storage.save_many_get_new([item]) == []

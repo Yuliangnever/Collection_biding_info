@@ -35,7 +35,11 @@ class TenderStorage:
             )
 
     def save_many(self, items: list[TenderItem]) -> int:
+        return len(self.save_many_get_new(items))
+
+    def save_many_get_new(self, items: list[TenderItem]) -> list[TenderItem]:
         inserted = 0
+        inserted_items: list[TenderItem] = []
         with self._connect() as conn:
             for item in items:
                 cursor = conn.execute(
@@ -58,7 +62,9 @@ class TenderStorage:
                     ),
                 )
                 inserted += cursor.rowcount
-        return inserted
+                if cursor.rowcount:
+                    inserted_items.append(item)
+        return inserted_items
 
     def list_latest(self, limit: int = 10) -> list[TenderItem]:
         with self._connect() as conn:
@@ -106,4 +112,3 @@ class TenderStorage:
             notified=bool(row[6]),
             created_at=str(row[7]),
         )
-

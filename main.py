@@ -7,6 +7,7 @@ import sys
 from src.config_loader import load_settings
 from src.pipeline import TenderPipeline
 from src.scheduler import run_forever
+from src.topic_utils import settings_with_topics
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -43,6 +44,8 @@ def main() -> None:
         sys.stdout.reconfigure(errors="replace")
     args = build_parser().parse_args()
     settings = load_settings()
+    if hasattr(args, "topics"):
+        settings = settings_with_topics(settings, list(args.topics))
     pipeline = TenderPipeline(settings)
 
     if args.command == "test-wecom":
