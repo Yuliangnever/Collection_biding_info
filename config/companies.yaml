@@ -1,0 +1,13 @@
+companies:
+  - name: State Grid
+    aliases:
+      - 国家电网
+      - 国网
+  - name: China Southern Power Grid
+    aliases:
+      - 南方电网
+  - name: China Energy
+    aliases:
+      - 国家能源集团
+      - 国能
+

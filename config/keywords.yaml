@@ -1,0 +1,18 @@
+keywords:
+  must_include:
+    - 招标
+    - 采购
+    - 中标
+  categories:
+    generation:
+      - 风电
+      - 光伏
+      - 火电
+    grid:
+      - 变电站
+      - 输电
+      - 配电
+    storage:
+      - 储能
+      - 电池
+
