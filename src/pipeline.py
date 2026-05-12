@@ -30,6 +30,9 @@ class TenderPipeline:
             )
         )
 
+    def send_test_message(self) -> dict[str, int]:
+        return {"sent": int(self.notifier.send_test_message())}
+
     def run_once(self, notify: bool) -> dict[str, int]:
         raw_items = self.scraper.crawl()
         enriched_items = [
@@ -49,8 +52,12 @@ class TenderPipeline:
 
     def _notify_pending(self) -> int:
         notified = 0
+        allow_demo = bool(self.settings.get("allow_demo_notifications", False))
         for item in self.storage.list_pending():
+            if item.source == DemoTenderScraper.source and not allow_demo:
+                continue
             if self.notifier.send(item):
                 self.storage.mark_notified(item)
                 notified += 1
         return notified
+

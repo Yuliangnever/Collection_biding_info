@@ -2,4 +2,4 @@ database_path: data/tenders.sqlite3
 webhook_url: ""
 request_timeout: 20
 demo_source_enabled: true
-
+allow_demo_notifications: false

@@ -27,16 +27,29 @@ class WebhookNotifier:
             raise RuntimeError(f"WeCom webhook failed: {result}")
         return True
 
+    def send_test_message(self) -> bool:
+        return self.send_text(
+            "\n".join(
+                [
+                    "企业微信机器人测试",
+                    "Energy Tender Monitor 已连接成功。",
+                    "这是一条测试消息，不代表真实招标信息。",
+                ]
+            )
+        )
+
     def send(self, item: TenderItem) -> bool:
         content = "\n".join(
             [
-                "Energy Tender Monitor 招标信息提醒",
+                "招标信息提醒",
+                "",
                 f"标题：{item.title}",
-                f"链接：{item.url}",
                 f"来源：{item.source}",
                 f"发布时间：{item.published_at}",
-                f"关键词：{', '.join(item.matched_keywords) or '无'}",
-                f"匹配公司：{', '.join(item.matched_companies) or '无'}",
+                f"关键词：{'、'.join(item.matched_keywords) or '无'}",
+                f"匹配公司：{'、'.join(item.matched_companies) or '无'}",
+                f"链接：{item.url}",
             ]
         )
         return self.send_text(content)
+

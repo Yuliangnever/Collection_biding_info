@@ -15,6 +15,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("run-once", help="crawl, persist, and notify")
     subparsers.add_parser("crawl-only", help="crawl and persist without notifying")
     subparsers.add_parser("push-pending", help="send pending notifications")
+    subparsers.add_parser("test-wecom", help="send a WeCom webhook test message")
 
     latest = subparsers.add_parser("list-latest", help="print latest tender items")
     latest.add_argument("--limit", type=int, default=10)
@@ -22,6 +23,10 @@ def build_parser() -> argparse.ArgumentParser:
     schedule = subparsers.add_parser("schedule", help="run continuously")
     schedule.add_argument("--interval-minutes", type=int, default=30)
     return parser
+
+
+def _print_json(data: object) -> None:
+    print(json.dumps(data, ensure_ascii=False, indent=2))
 
 
 def main() -> None:
@@ -34,24 +39,25 @@ def main() -> None:
     else:
         print("未配置 WEBHOOK_URL，跳过企业微信启动通知")
 
+    if args.command == "test-wecom":
+        _print_json(pipeline.send_test_message())
+        return
+
     if args.command == "run-once":
-        summary = pipeline.run_once(notify=True)
-        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        _print_json(pipeline.run_once(notify=True))
         return
 
     if args.command == "crawl-only":
-        summary = pipeline.run_once(notify=False)
-        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        _print_json(pipeline.run_once(notify=False))
         return
 
     if args.command == "push-pending":
-        summary = pipeline.push_pending()
-        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        _print_json(pipeline.push_pending())
         return
 
     if args.command == "list-latest":
         items = pipeline.storage.list_latest(args.limit)
-        print(json.dumps([item.to_dict() for item in items], ensure_ascii=False, indent=2))
+        _print_json([item.to_dict() for item in items])
         return
 
     if args.command == "schedule":
@@ -63,3 +69,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

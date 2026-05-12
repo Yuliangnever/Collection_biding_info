@@ -3,16 +3,23 @@ keywords:
     - 招标
     - 采购
     - 中标
+    - 成交
+    - 公示
   categories:
     generation:
       - 风电
       - 光伏
       - 火电
+      - 新能源
     grid:
       - 变电站
       - 输电
       - 配电
+      - 线路
+      - 设备
     storage:
       - 储能
       - 电池
+      - 电芯
+      - 系统集成
 

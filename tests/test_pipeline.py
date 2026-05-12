@@ -9,10 +9,13 @@ def test_pipeline_crawls_and_persists(tmp_path: Path) -> None:
             "database_path": str(tmp_path / "tenders.sqlite3"),
             "webhook_url": "",
             "request_timeout": 1,
+            "allow_demo_notifications": False,
             "keywords": {
                 "must_include": ["招标", "中标"],
-                "grid": ["输电"],
-                "storage": ["储能"],
+                "categories": {
+                    "grid": ["输电"],
+                    "storage": ["储能"],
+                },
             },
             "companies": [],
         }
